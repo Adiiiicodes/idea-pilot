@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { SaveProjectButton } from '@/components/SaveProjectButton';
-import { ResourceProcessor } from '@/components/ResourceProcessor';
-import { ResourceGrid } from '@/components/ResourceGrid';
+import { ResourceProcessor } from '@/components/resources/ResourceProcessor';
+import { ResourceGrid } from '@/components/resources/ResourceGrid';
 import { EnhancedResource } from '@/types/resource';
 
 // Define types for the project structure
@@ -67,8 +67,10 @@ export default function ProjectCard({
   const [expandedMilestone, setExpandedMilestone] = useState<number | null>(null);
   const [completedMilestones, setCompletedMilestones] = useState<number[]>([]);
   const [codeSnippetVisible, setCodeSnippetVisible] = useState<number | null>(null);
-  const [enhancedResources, setEnhancedResources] = useState<EnhancedResource[]>([]);
+
   const [showResourceProcessor, setShowResourceProcessor] = useState(false);
+  // Always initialize as empty array
+const [enhancedResources, setEnhancedResources] = useState<ProcessedResource[]>([]);
   
   // Load saved milestone completion state from localStorage
   useEffect(() => {
@@ -224,7 +226,7 @@ export default function ProjectCard({
               </p>
             </div>
             
-            {enhancedResources.length === 0 && !showResourceProcessor && (
+            {(enhancedResources?.length ?? 0) === 0 && !showResourceProcessor && (
               <button
                 onClick={() => setShowResourceProcessor(true)}
                 className="bg-primary-blue text-dark-text px-4 py-2 rounded-lg hover:bg-primary-purple transition-colors font-medium font-cabin"
