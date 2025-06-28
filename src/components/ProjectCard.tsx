@@ -55,6 +55,13 @@ interface ProjectCardProps {
   onSendMessage?: (message: string) => void; // Add this for mentor integration
 }
 
+// Define a proper type for processed resources
+interface ProcessedResource {
+  id?: string;
+  enhanced_resource: any;
+  mentor_context?: any;
+}
+
 export default function ProjectCard({ 
   project, 
   chatResponse, 
@@ -69,8 +76,8 @@ export default function ProjectCard({
   const [codeSnippetVisible, setCodeSnippetVisible] = useState<number | null>(null);
 
   const [showResourceProcessor, setShowResourceProcessor] = useState(false);
-  // Always initialize as empty array
-const [enhancedResources, setEnhancedResources] = useState<ProcessedResource[]>([]);
+  // Always initialize as empty array with proper type
+  const [enhancedResources, setEnhancedResources] = useState<ProcessedResource[]>([]);
   
   // Load saved milestone completion state from localStorage
   useEffect(() => {
@@ -146,7 +153,9 @@ const [enhancedResources, setEnhancedResources] = useState<ProcessedResource[]>(
 
   // Handle resource processing completion
   const handleResourceProcessingComplete = (resources: EnhancedResource[]) => {
-    setEnhancedResources(resources);
+    console.log('Resource processing completed with resources:', resources);
+    // Ensure we always set an array, even if resources is undefined/null
+    setEnhancedResources(Array.isArray(resources) ? resources : []);
     setShowResourceProcessor(false);
   };
 
@@ -226,7 +235,8 @@ const [enhancedResources, setEnhancedResources] = useState<ProcessedResource[]>(
               </p>
             </div>
             
-            {(enhancedResources?.length ?? 0) === 0 && !showResourceProcessor && (
+            {/* Safe check for enhancedResources length */}
+            {(!enhancedResources || enhancedResources.length === 0) && !showResourceProcessor && (
               <button
                 onClick={() => setShowResourceProcessor(true)}
                 className="bg-primary-blue text-dark-text px-4 py-2 rounded-lg hover:bg-primary-purple transition-colors font-medium font-cabin"
@@ -251,7 +261,8 @@ const [enhancedResources, setEnhancedResources] = useState<ProcessedResource[]>(
             </div>
           )}
 
-          {enhancedResources.length > 0 ? (
+          {/* Safe check for enhancedResources */}
+          {enhancedResources && enhancedResources.length > 0 ? (
             <ResourceGrid
               resources={enhancedResources}
               onAskMentor={(question) => {
