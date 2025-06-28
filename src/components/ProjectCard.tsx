@@ -55,13 +55,6 @@ interface ProjectCardProps {
   onSendMessage?: (message: string) => void; // Add this for mentor integration
 }
 
-// Define a proper type for processed resources
-interface ProcessedResource {
-  id?: string;
-  enhanced_resource: any;
-  mentor_context?: any;
-}
-
 export default function ProjectCard({ 
   project, 
   chatResponse, 
@@ -77,7 +70,7 @@ export default function ProjectCard({
 
   const [showResourceProcessor, setShowResourceProcessor] = useState(false);
   // Always initialize as empty array with proper type
-  const [enhancedResources, setEnhancedResources] = useState<ProcessedResource[]>([]);
+  const [enhancedResources, setEnhancedResources] = useState<EnhancedResource[]>([]);
   
   // Load saved milestone completion state from localStorage
   useEffect(() => {
