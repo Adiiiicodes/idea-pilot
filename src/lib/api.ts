@@ -67,6 +67,36 @@ export async function sendMentorMessage(
 }
 
 /**
+ * Send a message to the AI mentor with resource context
+ */
+export async function mentorChatWithResources(
+  message: string,
+  projectContext: any,
+  userId?: string,
+  projectId?: string
+): Promise<{ chatResponse: ChatResponse; userId: string; projectId: string; hasEnhancedResources?: boolean }> {
+  const response = await fetch(`${API_URL}/mentor-chat`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      message,
+      projectContext,
+      userId,
+      projectId
+    }),
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.error || 'Failed to get response');
+  }
+
+  return await response.json();
+}
+
+/**
  * Get chat history
  */
 export async function getChatHistory(
