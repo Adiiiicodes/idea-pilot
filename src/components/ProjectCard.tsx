@@ -5,6 +5,7 @@ import { SaveProjectButton } from '@/components/SaveProjectButton';
 import { ResourceProcessor } from '@/components/resources/ResourceProcessor';
 import { ResourceGrid } from '@/components/resources/ResourceGrid';
 import { EnhancedResource } from '@/types/resource';
+import RoadmapVisualizer from '@/components/RoadmapVisualizer';
 
 // Define types for the project structure
 interface CodeSnippet {
@@ -64,13 +65,9 @@ export default function ProjectCard({
   experienceLevel = 2,
   onSendMessage
 }: ProjectCardProps) {
-  const [expandedMilestone, setExpandedMilestone] = useState<number | null>(null);
   const [completedMilestones, setCompletedMilestones] = useState<number[]>([]);
-  const [codeSnippetVisible, setCodeSnippetVisible] = useState<number | null>(null);
-
-  const [showResourceProcessor, setShowResourceProcessor] = useState(false);
-  // Always initialize as empty array with proper type
   const [enhancedResources, setEnhancedResources] = useState<EnhancedResource[]>([]);
+  const [showResourceProcessor, setShowResourceProcessor] = useState(false);
   
   // Load saved milestone completion state from localStorage
   useEffect(() => {
@@ -87,11 +84,6 @@ export default function ProjectCard({
     }
   }, [project]);
   
-  // Toggle milestone expansion
-  const toggleMilestone = (index: number): void => {
-    setExpandedMilestone(expandedMilestone === index ? null : index);
-  };
-  
   // Mark milestone as complete
   const markComplete = (index: number): void => {
     if (!completedMilestones.includes(index)) {
@@ -103,11 +95,6 @@ export default function ProjectCard({
         localStorage.setItem(`milestone_${project.title}_${index}`, 'completed');
       }
     }
-  };
-  
-  // Toggle code snippet visibility
-  const toggleCodeSnippet = (index: number): void => {
-    setCodeSnippetVisible(codeSnippetVisible === index ? null : index);
   };
   
   // Get badge color based on difficulty
@@ -146,9 +133,7 @@ export default function ProjectCard({
 
   // Handle resource processing completion
   const handleResourceProcessingComplete = (resources: EnhancedResource[]) => {
-    console.log('Resource processing completed with resources:', resources);
-    // Ensure we always set an array, even if resources is undefined/null
-    setEnhancedResources(Array.isArray(resources) ? resources : []);
+    setEnhancedResources(resources);
     setShowResourceProcessor(false);
   };
 
@@ -228,8 +213,7 @@ export default function ProjectCard({
               </p>
             </div>
             
-            {/* Safe check for enhancedResources length */}
-            {(!enhancedResources || enhancedResources.length === 0) && !showResourceProcessor && (
+            {enhancedResources.length === 0 && !showResourceProcessor && (
               <button
                 onClick={() => setShowResourceProcessor(true)}
                 className="bg-primary-blue text-dark-text px-4 py-2 rounded-lg hover:bg-primary-purple transition-colors font-medium font-cabin"
@@ -246,7 +230,7 @@ export default function ProjectCard({
                 projectContext={project}
                 projectId={project.title} // Using title as projectId for now
                 onProcessingComplete={handleResourceProcessingComplete}
-                onError={(error) => {
+                onError={(error: any) => {
                   console.error('Resource processing error:', error);
                   setShowResourceProcessor(false);
                 }}
@@ -254,11 +238,10 @@ export default function ProjectCard({
             </div>
           )}
 
-          {/* Safe check for enhancedResources */}
-          {enhancedResources && enhancedResources.length > 0 ? (
+          {enhancedResources.length > 0 ? (
             <ResourceGrid
               resources={enhancedResources}
-              onAskMentor={(question) => {
+              onAskMentor={(question: string) => {
                 // Integrate with existing mentor chat
                 if (onSendMessage) {
                   onSendMessage(question);
@@ -292,7 +275,7 @@ export default function ProjectCard({
               </div>
               <div className="mt-4 p-4 bg-primary-blue bg-opacity-10 border border-primary-blue border-opacity-30 rounded-lg">
                 <p className="text-primary-blue text-sm font-source">
-                  💡 <strong>Tip:</strong> Click "Enhance Resources" to get AI-processed summaries, 
+                  💡 <strong>Tip:</strong> Click &quot;Enhance Resources&quot; to get AI-processed summaries, 
                   learning objectives, and integrated mentor guidance for these resources.
                 </p>
               </div>
@@ -301,113 +284,46 @@ export default function ProjectCard({
         </div>
       )}
       
-      {/* Milestones */}
+      {/* Milestones - Using the new RoadmapVisualizer */}
       <div className="p-4">
-        <h4 className="text-dark-text font-cabin font-bold mb-3">Project Roadmap:</h4>
-        {(project.milestones && project.milestones.length > 0) ? (
-          <div className="relative pl-8 border-l-2 border-secondary-green">
-            {project.milestones.map((milestone, index) => (
-              <div key={index} className="mb-6 relative">
-                {/* Timeline dot */}
-                <div
-                  className={`absolute w-4 h-4 rounded-full bg-primary-purple -left-[41px] top-1/2 -translate-y-1/2 border-2 border-dark-card ${
-                    completedMilestones.includes(index) ? 'bg-secondary-green' : ''
-                  }`}
-                ></div>
-                
-                {/* Milestone header */}
-                <div
-                  className="flex items-center cursor-pointer"
-                  onClick={() => toggleMilestone(index)}
-                >
-                  <h5 className="text-dark-text ml-3 font-cabin font-medium">{milestone.task || "Unnamed Task"}</h5>
-                  <span className="ml-2 text-xs text-dark-text-secondary">({milestone.estimatedTime || "N/A"})</span>
+        <RoadmapVisualizer 
+          milestones={project.milestones || []}
+          completedMilestones={completedMilestones}
+          onComplete={markComplete}
+        />
+      </div>
+      
+      {/* Code Snippets Section */}
+      {project.codeSnippets && project.codeSnippets.length > 0 && (
+        <div className="p-4 border-t border-dark-border">
+          <h4 className="text-dark-text font-cabin font-bold mb-3">Code Snippets:</h4>
+          <div className="space-y-4">
+            {project.codeSnippets.map((snippet, index) => (
+              <div key={index} className="mt-2 p-3 bg-dark-element rounded-md border border-dark-border">
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-xs text-dark-text-secondary">
+                    For Milestone: {snippet.milestoneIndex + 1}
+                  </span>
                   <button
-                    className={`ml-auto text-xs px-2 py-1 rounded ${
-                      completedMilestones.includes(index)
-                        ? 'bg-secondary-green text-dark-text'
-                        : 'bg-dark-element text-dark-text-secondary border border-dark-border'
-                    }`}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      markComplete(index);
-                    }}
+                    onClick={() => copyToClipboard(snippet.code)}
+                    className="text-xs px-2 py-1 bg-primary-blue text-dark-text rounded hover:bg-primary-purple"
                   >
-                    {completedMilestones.includes(index) ? 'Completed' : 'Mark Complete'}
+                    Copy
                   </button>
                 </div>
-                
-                {/* Milestone details */}
-                {expandedMilestone === index && (
-                  <div className="mt-2 transition-all duration-300">
-                    <p className="text-dark-text font-source text-sm mb-2">
-                      {milestone.description || "No description available."}
-                    </p>
-                    
-                    <div className="flex items-center mb-2">
-                      {milestone.resourceLink && (
-                        <a
-                          href={milestone.resourceLink}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-primary-blue text-sm underline hover:text-primary-purple"
-                        >
-                          View Resource
-                        </a>
-                      )}
-                      
-                      {(project.codeSnippets || []).some(snippet => snippet.milestoneIndex === index) && (
-                        <button
-                          className="ml-4 text-xs px-2 py-1 bg-primary-blue text-dark-text rounded hover:bg-primary-purple"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            toggleCodeSnippet(index);
-                          }}
-                        >
-                          {codeSnippetVisible === index ? 'Hide Code' : 'View Code'}
-                        </button>
-                      )}
-                    </div>
-                    
-                    {/* Code snippet */}
-                    {codeSnippetVisible === index && (project.codeSnippets || []).map((snippet, i) => {
-                      if (snippet.milestoneIndex === index) {
-                        // Remove markdown code fences for display
-                        const displayCode = snippet.code.replace(/^```[\s\S]*?\n/, '').replace(/```$/, '');
-                        
-                        return (
-                          <div key={i} className="mt-2 p-3 bg-dark-element rounded-md border border-dark-border">
-                            <div className="flex justify-between items-center mb-2">
-                              <span className="text-xs text-dark-text-secondary">Code Snippet</span>
-                              <button
-                                onClick={() => copyToClipboard(snippet.code)}
-                                className="text-xs px-2 py-1 bg-primary-blue text-dark-text rounded hover:bg-primary-purple"
-                              >
-                                Copy
-                              </button>
-                            </div>
-                            <pre className="text-sm overflow-x-auto font-jetbrains text-dark-text whitespace-pre-wrap bg-black bg-opacity-30 p-2 rounded">
-                              {displayCode}
-                            </pre>
-                            {snippet.debugHint && (
-                              <div className="mt-2 p-2 bg-accent-yellow bg-opacity-20 rounded text-xs text-dark-text">
-                                <strong>Debug Hint:</strong> {snippet.debugHint}
-                              </div>
-                            )}
-                          </div>
-                        );
-                      }
-                      return null;
-                    })}
+                <pre className="text-sm overflow-x-auto font-jetbrains text-dark-text whitespace-pre-wrap bg-black bg-opacity-30 p-2 rounded">
+                  {snippet.code.replace(/^```[\s\S]*?\n/, '').replace(/```$/, '')}
+                </pre>
+                {snippet.debugHint && (
+                  <div className="mt-2 p-2 bg-accent-yellow bg-opacity-20 rounded text-xs text-dark-text">
+                    <strong>Debug Hint:</strong> {snippet.debugHint}
                   </div>
                 )}
               </div>
             ))}
           </div>
-        ) : (
-          <div className="text-dark-text-secondary">No milestones available.</div>
-        )}
-      </div>
+        </div>
+      )}
       
       {/* Action buttons */}
       <div className="p-4 bg-dark-element flex flex-wrap gap-3">
@@ -416,6 +332,12 @@ export default function ProjectCard({
           className="px-4 py-2 bg-primary-blue text-dark-text rounded-md font-cabin transition-all duration-200 hover:scale-105 hover:bg-accent-pink flex-1"
         >
           Regenerate Idea
+        </button>
+        <button
+          onClick={onSave}
+          className="px-4 py-2 bg-secondary-green text-dark-text rounded-md font-cabin transition-all duration-200 hover:scale-105 flex-1"
+        >
+          Save Project
         </button>
         <button
           onClick={downloadResourcePack}
