@@ -16,6 +16,13 @@ const nextConfig: NextConfig = {
     }
     return config;
   },
+  // Force all pages to be dynamic to avoid SSG issues with client-side code
+  experimental: {
+    missingSuspenseWithCSRBailout: false,
+  },
+  // Disable static optimization completely
+  output: 'standalone',
+  trailingSlash: false,
   /* config options here */
 };
 

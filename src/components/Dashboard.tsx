@@ -8,11 +8,12 @@ import ProjectCard from '@/components/ProjectCard';
 import AIMentorChat from '@/components/AIMentorChat';
 import CommunityChat from '@/components/CommunityChat';
 import PrivateChat from '@/components/PrivateChat';
+import QuickStartGuide from '@/components/QuickStartGuide';
 import { SavedProject } from '@/lib/supabase';
 import { User } from '@supabase/supabase-js';
 import { useChatContext } from '@/app/contexts/ChatContext';
+import { useAuth } from '@/contexts/AuthContext';
 import toast from 'react-hot-toast';
-import SupabaseDiagnostic from './SupabaseDiagnostic';
 
 // Project response types
 interface Milestone {
@@ -73,8 +74,12 @@ export default function Dashboard() {
   const [isChatOpen, setIsChatOpen] = useState<boolean>(false);
   const [lastExperienceLevel, setLastExperienceLevel] = useState<number>(2);
   
+  // Quick Start Guide state - only show for new users
+  const [showQuickStart, setShowQuickStart] = useState<boolean>(false);
+  
   // Hooks
   const router = useRouter();
+  const { isNewUser, setIsNewUser } = useAuth();
   
   // Removing unused variables from useChatContext
   const { /* userId, projectIds, setProjectId */ } = useChatContext();
@@ -105,6 +110,18 @@ export default function Dashboard() {
     
     checkAuthentication();
   }, [router, activeTab]);
+
+  // Show Quick Start Guide only for new users (after signup)
+  useEffect(() => {
+    if (!loading && user && isNewUser) {
+      // Small delay to let the dashboard load first
+      const timer = setTimeout(() => {
+        setShowQuickStart(true);
+      }, 500);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [loading, user, isNewUser]);
   
   // Load user's saved projects from the new API endpoint
   const loadSavedProjects = async (userId: string): Promise<void> => {
@@ -270,6 +287,12 @@ export default function Dashboard() {
       loadSavedProjects(user.id);
     }
   };
+
+  // Handle Quick Start Guide close
+  const handleQuickStartClose = (): void => {
+    setShowQuickStart(false);
+    setIsNewUser(false); // Mark user as no longer new
+  };
   
   // Render loading spinner
   const renderLoading = () => (
@@ -364,6 +387,21 @@ export default function Dashboard() {
               </div>
             ))}
           </div>
+        </div>
+      </div>
+
+      {/* Quick Start Button - Always available for manual access */}
+      <div className="bg-dark-card rounded-lg shadow-md border border-dark-border overflow-hidden mt-4">
+        <div className="p-4">
+          <button
+            onClick={() => setShowQuickStart(true)}
+            className="w-full flex items-center gap-3 p-3 bg-gradient-to-r from-primary-purple to-primary-blue text-dark-text rounded-lg hover:from-accent-pink hover:to-primary-purple transition-all duration-200 hover:scale-105"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span className="font-medium font-cabin">Quick Start Guide</span>
+          </button>
         </div>
       </div>
     </div>
@@ -525,7 +563,7 @@ export default function Dashboard() {
             >
               <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path>
             </svg>
-            <h1 className="text-2xl font-bold font-cabin">Idea Pilot</h1>
+            <h1 className="text-2xl font-bold font-cabin">IdeaPilot AI</h1>
           </div>
           
           {user && (
@@ -569,6 +607,11 @@ export default function Dashboard() {
           </div>
         )}
       </main>
+
+      {/* Quick Start Guide - Only show for new users */}
+      {showQuickStart && (
+        <QuickStartGuide onClose={handleQuickStartClose} />
+      )}
     </div>
   );
 }

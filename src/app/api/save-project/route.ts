@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
-import https from 'https';
+
+// The backend URL from environment variable
+const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
 export async function POST(request: Request) {
   try {
@@ -9,17 +11,11 @@ export async function POST(request: Request) {
     const body = await request.json();
     console.log('Request body:', body);
 
-    // Use the current ngrok URL with the correct /api prefix
-    const BACKEND_URL = 'https://00fd-136-232-6-66.ngrok-free.app';
-    const apiUrl = `${BACKEND_URL}/api/save-project`; // Add /api here
+    // Use the environment variable for backend URL
+    const apiUrl = `${BACKEND_URL}/api/save-project`;
     console.log(`Forwarding request to ${apiUrl}`);
-    
-    // Create an agent that ignores SSL certificate issues
-    const httpsAgent = new https.Agent({
-      rejectUnauthorized: false
-    });
 
-    // Make the request with detailed error handling
+    // Make the request
     const backendResponse = await fetch(apiUrl, {
       method: 'POST',
       headers: {

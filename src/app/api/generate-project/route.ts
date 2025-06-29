@@ -1,14 +1,7 @@
-// app/api/generate-project/route.ts
 import { NextResponse } from 'next/server';
-import https from 'https';
 
-// The actual backend URL with IP address
-const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || 'https://00fd-136-232-6-66.ngrok-free.app';
-
-// Create a custom HTTPS agent that ignores SSL certificate errors
-const httpsAgent = new https.Agent({
-  rejectUnauthorized: false
-});
+// The backend URL from environment variable
+const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
 export async function POST(request: Request) {
   try {
@@ -54,15 +47,13 @@ export async function POST(request: Request) {
     const apiUrl = `${BACKEND_URL}/api/generate-project`;
     console.log(`API Route: Forwarding request to ${apiUrl}`);
     
-    // Forward the request to your Flask backend with certificate validation disabled
+    // Forward the request to your Flask backend
     const backendResponse = await fetch(apiUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(body),
-      // Use the agent that ignores SSL certificate validation
-      agent: httpsAgent
     });
     
     // Log the response status for debugging

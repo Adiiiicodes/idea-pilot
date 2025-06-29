@@ -1,11 +1,7 @@
-// app/api/mentor-chat/route.ts
 import { NextResponse } from 'next/server';
-import https from 'https';
 
-// Create an agent that ignores SSL certificate issues
-const httpsAgent = new https.Agent({
-  rejectUnauthorized: false
-});
+// The backend URL from environment variable
+const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
 export async function POST(request: Request) {
   try {
@@ -14,7 +10,6 @@ export async function POST(request: Request) {
     console.log('Mentor chat request:', body);
     
     // Use environment variable for backend URL
-    const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || 'https://00fd-136-232-6-66.ngrok-free.app/api';
     const apiUrl = `${BACKEND_URL}/api/mentor-chat`;
     
     console.log(`Forwarding mentor chat request to: ${apiUrl}`);
@@ -26,7 +21,6 @@ export async function POST(request: Request) {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(body),
-      agent: httpsAgent // Ignore SSL certificate issues
     });
 
     console.log('Backend mentor chat response status:', backendResponse.status);

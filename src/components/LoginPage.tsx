@@ -1,8 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { signIn, signUp, AuthResponse } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function LoginPage() {
   const [email, setEmail] = useState<string>('');
@@ -12,6 +13,7 @@ export default function LoginPage() {
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
+  const { setIsNewUser } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault();
@@ -24,9 +26,13 @@ export default function LoginPage() {
       if (isLogin) {
         // Handle login
         response = await signIn(email, password);
+        // For login, user is not new
+        setIsNewUser(false);
       } else {
         // Handle sign up
         response = await signUp(email, password, fullName);
+        // For signup, mark as new user - this will be handled by the auth state change
+        console.log('Signup response:', response);
       }
       
       if (response.error) {
@@ -36,6 +42,7 @@ export default function LoginPage() {
         if (!response.data.session && !isLogin) {
           setError('Please check your email to confirm your account before logging in');
         } else {
+          // Successful login/signup with session
           router.push('/dashboard');
         }
       }
@@ -59,8 +66,8 @@ export default function LoginPage() {
           </h1>
           <p className="mt-2 text-dark-text-secondary">
             {isLogin 
-              ? 'Welcome back to Idea Pilot'
-              : 'Start your journey with Idea Pilot'}
+              ? 'Welcome back to IdeaPilot'
+              : 'Start your journey with IdeaPilot AI'}
           </p>
         </div>
         
