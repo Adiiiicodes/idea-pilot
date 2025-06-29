@@ -1,11 +1,11 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { SaveProjectButton } from '@/components/SaveProjectButton';
 import { ResourceProcessor } from '@/components/resources/ResourceProcessor';
 import { ResourceGrid } from '@/components/resources/ResourceGrid';
 import { EnhancedResource } from '@/types/resource';
 import RoadmapVisualizer from '@/components/RoadmapVisualizer';
+import ConceptVisualizer from '@/components/ConceptVisualizer';
 
 // Define types for the project structure
 interface CodeSnippet {
@@ -176,12 +176,23 @@ export default function ProjectCard({
         </div>
       </div>
 
+      {/* Concept Map */}
       <div className="p-4 border-b border-dark-border">
-        <SaveProjectButton 
-          project={project}
-          conceptText={conceptText}
-          experienceLevel={experienceLevel}
-        />
+        <h4 className="text-dark-text font-cabin font-bold mb-2">Concept Map:</h4>
+        <ConceptVisualizer concepts={[
+          {
+            id: 'core',
+            name: project.title,
+            description: project.description,
+            connections: project.tools || []
+          },
+          ...(project.tools || []).map(tool => ({
+            id: tool.toLowerCase().replace(/\s+/g, '-'),
+            name: tool,
+            description: `Learn how to use ${tool} to build your project`,
+            connections: ['core']
+          }))
+        ]} />
       </div>
       
       {/* AI Mentor Tip */}
@@ -332,12 +343,6 @@ export default function ProjectCard({
           className="px-4 py-2 bg-primary-blue text-dark-text rounded-md font-cabin transition-all duration-200 hover:scale-105 hover:bg-accent-pink flex-1"
         >
           Regenerate Idea
-        </button>
-        <button
-          onClick={onSave}
-          className="px-4 py-2 bg-secondary-green text-dark-text rounded-md font-cabin transition-all duration-200 hover:scale-105 flex-1"
-        >
-          Save Project
         </button>
         <button
           onClick={downloadResourcePack}
